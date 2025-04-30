@@ -1,4 +1,5 @@
-import React, { forwardRef, useEffect } from "react";
+// src/components/ItemComponents.jsx
+import React, { forwardRef, useEffect, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import { Modal, Button, Form } from "react-bootstrap";
 import { X } from "lucide-react";
@@ -141,6 +142,8 @@ const Workspace = forwardRef(
   }
 );
 
+Workspace.displayName = "Workspace";
+
 // Workspace Item Component
 function WorkspaceItem({ item, onClick, onRemove, onRemoveNote }) {
   return (
@@ -180,13 +183,13 @@ function WorkspaceItem({ item, onClick, onRemove, onRemoveNote }) {
   );
 }
 
-// Arrow Component
+// Arrow Component - FIXED to connect at the end
 function Arrow({ startItem, endItem }) {
   // Calculate start and end points for the arrow
-  const startX = startItem.position.x + 150;
-  const startY = startItem.position.y + 20;
-  const endX = endItem.position.x;
-  const endY = endItem.position.y + 20;
+  const startX = startItem.position.x + 150; // Right side of the start item
+  const startY = startItem.position.y + 20; // Middle of the start item
+  const endX = endItem.position.x; // Left side of the end item
+  const endY = endItem.position.y + 20; // Middle of the end item
 
   // Determine if the items are on the same row or different rows
   const isSameRow = Math.abs(startY - endY) < 30;
@@ -194,14 +197,33 @@ function Arrow({ startItem, endItem }) {
   // Draw an SVG path for the arrow
   let path;
   if (isSameRow) {
+    // Straight horizontal arrow
     path = `M ${startX} ${startY} L ${startX + 10} ${startY} L ${
       endX - 10
     } ${endY} L ${endX} ${endY}`;
   } else {
-    const midX = (startX + endX) / 2;
-    path = `M ${startX} ${startY} L ${startX + 20} ${startY} 
-             L ${midX} ${startY} L ${midX} ${endY} 
-             L ${endX - 20} ${endY} L ${endX} ${endY}`;
+    // For items on different rows, create a path that goes from the end of the first item
+    // to the start of the second item with a curve
+    const midX1 = startX + 20;
+    const midX2 = endX - 20;
+
+    if (startItem.position.y < endItem.position.y) {
+      // If the second item is below the first
+      path = `M ${startX} ${startY} 
+              L ${midX1} ${startY} 
+              C ${midX1 + 50} ${startY}, ${
+        midX1 + 50
+      } ${endY}, ${midX2} ${endY} 
+              L ${endX} ${endY}`;
+    } else {
+      // If the second item is above the first
+      path = `M ${startX} ${startY} 
+              L ${midX1} ${startY} 
+              C ${midX1 + 50} ${startY}, ${
+        midX1 + 50
+      } ${endY}, ${midX2} ${endY} 
+              L ${endX} ${endY}`;
+    }
   }
 
   // Calculate arrow head points
@@ -289,11 +311,11 @@ function ActionButtons({ onAction }) {
   );
 }
 
-// Modal Component
+// Modal Component - FIXED
 function ItemModal({ show, onHide, onSave, item }) {
-  const [note, setNote] = React.useState("");
+  const [note, setNote] = useState("");
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (item && show) {
       setNote(item.note || "");
     }
@@ -341,5 +363,5 @@ export const ItemComponents = {
   Arrow,
   SelectedElements,
   ActionButtons,
-  Modal,
+  Modal: ItemModal, // Fixed: Export the modal component with the correct name
 };
